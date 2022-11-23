@@ -9,22 +9,24 @@ import {
     getAllUsers,
     getAllLabels,
     createLabel,
-    createCard,
+    updateCard,
     getCard,
     getProject,
+    deleteCard as deleteCardApi,
 } from "../tauri";
 import { IconUploadError } from "@douyinfe/semi-icons";
 import { FormApi } from "@douyinfe/semi-ui/lib/es/form";
 import { open } from "@tauri-apps/api/dialog";
 import Label from "@douyinfe/semi-ui/lib/es/form/label";
 
-type NewCardProps = {
+type EditCardProps = {
     visible: boolean;
     setVisible: (visible: boolean) => void;
     projectId: number;
     refreshProject: boolean;
     setRefreshProject: (refresh: boolean) => void;
-    setCardId?: (id: number) => void;
+    cardId: number;
+    setCardId: (id: number) => void;
     config: Config;
 };
 
@@ -33,7 +35,7 @@ type File = {
     path: string;
 };
 
-export const AvatarColors = [
+const AvatarColors = [
     "amber",
     "blue",
     "cyan",
@@ -57,14 +59,16 @@ type Option = {
     label: string;
 };
 
-export const NewCard = ({
+export const EditCard = ({
     visible,
     setVisible,
     projectId,
     refreshProject,
     setRefreshProject,
+    cardId,
+    setCardId,
     config,
-}: NewCardProps) => {
+}: EditCardProps) => {
     const [columns, setColumns] = useState<Column[]>([]);
     const [users, setUsers] = useState<Option[]>();
     const [labels, setLabels] = useState<Option[]>();
@@ -74,6 +78,7 @@ export const NewCard = ({
     const [nameValid, setNameValid] = useState(true);
     const [isSubmit, setIsSubmit] = useState(false);
     const [project, setProject] = useState<Project>();
+    const [isLoad, setIsLoad] = useState(false);
     const fetchProject = async () => {
         const project = await getProject(projectId);
         setProject(project);
@@ -103,7 +108,12 @@ export const NewCard = ({
         fetchUsers();
         fetchLabels();
         fetchProject();
-    }, [visible]);
+        setDispatchFile(undefined);
+        setReceivedFiles([]);
+    }, [visible && cardId]);
+    useEffect(() => {
+        fetchCard();
+    }, [visible && cardId]);
     const formApiRef = useRef<FormApi>();
     const saveFormApi = (formApi: FormApi) => {
         formApiRef.current = formApi;
@@ -197,9 +207,9 @@ export const NewCard = ({
         if (assignee_ids.length > 0) {
             card.assigneeIds = assignee_ids.join(",");
         }
-        await createCard(card)
+        await updateCard(cardId, card)
             .then(async () => {
-                Toast.success("Create card successfully");
+                Toast.success("Update card successfully");
                 setVisible(false);
                 setRefreshProject(!refreshProject);
                 formApiRef.current?.setValues({});
@@ -207,9 +217,10 @@ export const NewCard = ({
                 setDispatchFile(undefined);
                 setReceivedFiles([]);
                 await CopyFileToProject();
+                setCardId(-1);
             })
             .catch((err) => {
-                Toast.error(`Create card failed, ${err}`);
+                Toast.error(`Update card failed, ${err}`);
             });
         setIsSubmit(false);
     };
@@ -233,6 +244,47 @@ export const NewCard = ({
             await createDir(`${baseDir}/Received Files`, { recursive: true });
             await copyFile(file.path, `${baseDir}/Received Files/${file.name}`);
         }
+    };
+    const fetchCard = async () => {
+        setIsLoad(false);
+        setDispatchFile(undefined);
+        setReceivedFiles([]);
+        if (cardId && cardId !== -1) {
+            const card = await getCard(cardId);
+            setName(card.name);
+            formApiRef.current?.setValues({
+                status: card.column_id,
+                description: card.description,
+                due_date: card.due_date,
+            });
+            if (card.label_ids) {
+                formApiRef.current?.setValue(
+                    "labels",
+                    card.label_ids.split(",").map((id) => Number(id))
+                );
+            }
+            if (card.assignee_ids) {
+                formApiRef.current?.setValue(
+                    "assignees",
+                    card.assignee_ids.split(",").map((id) => Number(id))
+                );
+            }
+            if (card.dispatch_file) {
+                setDispatchFile({
+                    name: card.dispatch_file,
+                    path: `${config.archived_document_directory}/${project?.name}/${card.name}/Dispatch File/${card.dispatch_file}`,
+                });
+            }
+            if (card.received_files) {
+                setReceivedFiles(
+                    card.received_files.split(",").map((file) => ({
+                        name: file,
+                        path: `${config.archived_document_directory}/${project?.name}/${card.name}/Received Files/${file}`,
+                    }))
+                );
+            }
+        }
+        setIsLoad(true);
     };
     const handleDispatchFileUpload = async () => {
         const selected = await open({});
@@ -272,6 +324,20 @@ export const NewCard = ({
     };
     const handleClose = () => {
         setVisible(false);
+        if (cardId && setCardId) {
+            setCardId(-1);
+        }
+    };
+    const deleteCard = async () => {
+        await deleteCardApi(cardId)
+            .then(() => {
+                Toast.success("Delete card successfully");
+                setRefreshProject(!refreshProject);
+                handleClose();
+            })
+            .catch((err) => {
+                Toast.error(`Delete card failed, ${err}`);
+            });
     };
     return (
         <div
@@ -313,7 +379,7 @@ export const NewCard = ({
                         </IButton>
                     </div>
                     <div className="flex gap-3">
-                        <IButton>
+                        <IButton className="p-0">
                             <button
                                 type="submit"
                                 className="bg-transparent flex items-center text-blue-700"
@@ -330,6 +396,28 @@ export const NewCard = ({
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                         d="M4.5 12.75l6 6 9-13.5"
+                                    />
+                                </svg>
+                            </button>
+                        </IButton>
+                        <IButton>
+                            <button
+                                className="bg-transparent flex items-center text-ngray-700"
+                                type="button"
+                                onClick={() => deleteCard()}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.5}
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
                                     />
                                 </svg>
                             </button>

@@ -47,7 +47,10 @@
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+        "timestampUrl": "",
+        "webviewInstallMode": {
+          "type": "offlineInstaller"
+        }
       }
     },
     "security": {
@@ -62,7 +65,7 @@
         "height": 800,
         "resizable": true,
         "title": "bukan",
-        "width": 1100,
+        "width": 1200,
         "fileDropEnabled": false
       }
     ]

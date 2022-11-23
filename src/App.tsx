@@ -1,67 +1,92 @@
-import { Board } from "./components/Board";
-import { UserMenu } from "./components/UserMenu";
-import { CardStatus } from "./types";
-import { useState, useEffect } from "react";
-import { ViewCard } from "./components/ViewCard";
+import { Kanban } from "./components/Kanban";
+import { Sidebar } from "./components/Sidebar";
+import { IconMore } from "@douyinfe/semi-icons";
+import { Filter } from "./components/Filter";
+import { useEffect, useState } from "react";
+import { Config } from "./types";
+import { getConfig } from "./tauri";
+import { NewCard } from "./components/NewCard";
+import { Settings } from "./components/Settings";
+import { EditCard } from "./components/EditCard";
 
 export const App = () => {
-    const [sideVisible, setSideVisible] = useState(false);
-    const [cardId, setCardId] = useState<null | number>(null);
-    useEffect(() => {
-        if (cardId !== null) {
-            setSideVisible(true);
-        }
+    const [config, setConfig] = useState<Config>({
+        is_first_run: false,
+        actived_project_id: -1,
+        archived_document_directory: "",
     });
+    const [keyword, setKeyword] = useState("");
+    const [newCardVisible, setNewCardVisible] = useState(false);
+    const [refreshProject, setRefreshProject] = useState(false);
+    const [CardId, setCardId] = useState<number>(-1);
+    const fetchConfig = async () => {
+        const config = await getConfig();
+        setConfig(config);
+    };
+    useEffect(() => {
+        fetchConfig();
+    }, []);
+    useEffect(() => {
+        if (CardId && CardId !== -1) {
+            setNewCardVisible(true);
+        }
+    }, [CardId]);
     return (
-        <div className="px-8 py-5">
-            <div className="flex justify-between items-center mb-7">
-                <h1 className="text-xl font-bold">各项工作进展台账</h1>
-                <div className="flex items-center">
-                    <UserMenu></UserMenu>
-                    <div className="ml-2">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="w-7 h-7"
+        <div>
+            <Settings config={config} />
+            <div className="flex">
+                <Sidebar refreshProject={refreshProject} />
+                <div>
+                    <div className="mt-3">
+                        <div
+                            className={
+                                "pl-12 mr-6 overflow-scroll min-h-screen" +
+                                (newCardVisible ? " w-[calc(100%-27rem)]" : "")
+                            }
                         >
-                            <path
-                                fillRule="evenodd"
-                                d="M4.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm6 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"
-                                clipRule="evenodd"
+                            <Filter
+                                setNewCardVisible={setNewCardVisible}
+                                config={config}
+                                setConfig={setConfig}
+                                keyword={keyword}
+                                setKeyword={setKeyword}
                             />
-                        </svg>
+                            <Kanban
+                                activeProjectId={config.actived_project_id}
+                                refreshProject={refreshProject}
+                                setRefreshProject={setRefreshProject}
+                                setCardId={setCardId}
+                                keyword={keyword}
+                            />
+                        </div>
                     </div>
+                    {config.actived_project_id !== -1 &&
+                        CardId &&
+                        CardId !== -1 && (
+                            <EditCard
+                                visible={newCardVisible}
+                                setVisible={setNewCardVisible}
+                                projectId={config.actived_project_id}
+                                refreshProject={refreshProject}
+                                setRefreshProject={setRefreshProject}
+                                cardId={CardId}
+                                setCardId={setCardId}
+                                config={config}
+                            ></EditCard>
+                        )}
+                    {config.actived_project_id !== -1 && CardId === -1 && (
+                        <NewCard
+                            visible={newCardVisible}
+                            setVisible={setNewCardVisible}
+                            projectId={config.actived_project_id}
+                            refreshProject={refreshProject}
+                            setRefreshProject={setRefreshProject}
+                            setCardId={setCardId}
+                            config={config}
+                        ></NewCard>
+                    )}
                 </div>
             </div>
-            <div className="w-full flex flex-row gap-4">
-                <Board
-                    title={CardStatus.TODO}
-                    status={CardStatus.TODO}
-                    hideCreateBtn={false}
-                    setCardId={setCardId}
-                ></Board>
-                <Board
-                    title={CardStatus.DOING}
-                    status={CardStatus.DOING}
-                    hideCreateBtn={true}
-                    setCardId={setCardId}
-                ></Board>
-                <Board
-                    title={CardStatus.DONE}
-                    status={CardStatus.DONE}
-                    hideCreateBtn={true}
-                    setCardId={setCardId}
-                ></Board>
-            </div>
-            {cardId && (
-                <ViewCard
-                    cardId={cardId}
-                    visible={sideVisible}
-                    setVisible={setSideVisible}
-                    setCardId={setCardId}
-                ></ViewCard>
-            )}
         </div>
     );
 };

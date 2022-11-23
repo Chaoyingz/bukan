@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-    button, [type='button'], [type='reset'], [type='submit'] {
-    background-color: var( --semi-color-fill-0);
+    button, [aria-label="cancel"] {
+        background-color: var( --semi-color-fill-0);
     }
+    button, [aria-label="confirm"] {
+        background-color: var( --semi-color-primary);
     }
+}

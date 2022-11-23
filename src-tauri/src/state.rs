@@ -1,20 +1,22 @@
-use crate::connection;
-use serde_derive::{Deserialize, Serialize};
+use crate::config::Config;
+use crate::db::connection;
+use sqlx::SqlitePool;
 use std::env;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use tauri::Config;
+use std::sync::Arc;
+use tauri::Config as TauriConfig;
 use tauri::State as TauriState;
+use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub struct Settings {
     pub app_dir: PathBuf,
-    pub database_url: PathBuf,
+    pub database_url: String,
     pub config_url: PathBuf,
 }
 
 impl Settings {
-    fn new(config: &Config) -> Self {
+    fn new(config: &TauriConfig) -> Self {
         let app_dir = match env::var("DEVELOPMENT").is_ok() {
             true => env::current_dir().unwrap().join("app_data"),
             false => tauri::api::path::app_dir(config).unwrap(),
@@ -25,46 +27,15 @@ impl Settings {
         let database_url = app_dir.join("bukan.sqlite");
         Self {
             app_dir: app_dir.clone(),
-            database_url: database_url,
+            database_url: database_url.to_str().unwrap().to_string(),
             config_url: app_dir.join("config.toml"),
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct UserConfig {
-    pub is_first_run: bool,
-    pub upload_dir: PathBuf,
-}
-
-impl UserConfig {
-    fn default_config() -> Self {
-        Self {
-            is_first_run: true,
-            upload_dir: dirs::desktop_dir().unwrap(),
-        }
-    }
-    pub fn load(config_url: &PathBuf) -> Self {
-        if config_url.exists() {
-            let config_str = std::fs::read_to_string(config_url).unwrap();
-            toml::from_str(&config_str).unwrap()
-        } else {
-            let config = Self::default_config();
-            let config_str = toml::to_string(&config).unwrap();
-            std::fs::write(config_url, config_str).unwrap();
-            config
-        }
-    }
-    pub fn save(&self, config_url: &PathBuf) {
-        let config_str = toml::to_string(&self).unwrap();
-        println!("Saving config: {}", config_str);
-        std::fs::write(config_url, config_str).unwrap();
-    }
-}
-
 pub struct StateData {
-    pub connection: rusqlite::Connection,
-    pub user_config: UserConfig,
+    pub db: SqlitePool,
+    pub config: Config,
     pub settings: Settings,
 }
 
@@ -73,15 +44,16 @@ pub struct ArcState {
 }
 
 impl ArcState {
-    pub fn new(config: &Config) -> ArcState {
+    pub async fn new(config: &TauriConfig) -> ArcState {
         let settings = Settings::new(config);
-        let connection = connection::establish_connection(&settings.database_url);
-        let data = Arc::new(Mutex::new(StateData {
-            connection: connection,
-            user_config: UserConfig::load(&settings.config_url),
-            settings: settings,
-        }));
-        ArcState { data }
+        let db = connection::establish_connection(&settings.database_url).await;
+        Self {
+            data: Arc::new(Mutex::new(StateData {
+                db,
+                config: Config::load(&settings),
+                settings,
+            })),
+        }
     }
 }
 
