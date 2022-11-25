@@ -126,7 +126,7 @@ export const EditCard = ({
                 registedUserIds = users.map((user) => user.value);
             }
             let checkedUserIds = registedUserIds.filter((userId) =>
-                values.labels.includes(userId)
+                values.assignees.includes(userId)
             );
             const UnregistedUsers = values.assignees.filter(
                 (assignee: string) =>
@@ -233,7 +233,7 @@ export const EditCard = ({
     };
     const CopyFileToProject = async () => {
         let baseDir = `${config.archived_document_directory}/${project?.name}/${name}`;
-        if (dispatchFile) {
+        if (dispatchFile && !dispatchFile.path.includes("Dispatch File")) {
             await createDir(`${baseDir}/Dispatch File`, { recursive: true });
             await copyFile(
                 dispatchFile.path,
@@ -241,6 +241,9 @@ export const EditCard = ({
             );
         }
         for (let file of receivedFiles) {
+            if (file.path.includes("Received Files")) {
+                continue;
+            }
             await createDir(`${baseDir}/Received Files`, { recursive: true });
             await copyFile(file.path, `${baseDir}/Received Files/${file.name}`);
         }

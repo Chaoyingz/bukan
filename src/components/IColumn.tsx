@@ -68,7 +68,7 @@ export const IColumn = ({
                     </button>
                 </IButton>
             </div>
-            {cards.length > 0 && (
+            {
                 <Droppable droppableId={column.id.toString()}>
                     {(provided, snapshot): JSX.Element => (
                         <div
@@ -94,7 +94,7 @@ export const IColumn = ({
                         </div>
                     )}
                 </Droppable>
-            )}
+            }
             <div className="px-2">
                 <NewCardByName
                     visible={newCardInputVisible}

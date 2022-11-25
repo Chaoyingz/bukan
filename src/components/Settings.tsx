@@ -8,9 +8,10 @@ import { setArchivedDocumentDirectory as setArchivedDocumentDirectoryTauri } fro
 
 type SettingsProps = {
     config: Config;
+    setConfig: (config: Config) => void;
 };
 
-export const Settings = ({ config }: SettingsProps) => {
+export const Settings = ({ config, setConfig }: SettingsProps) => {
     const [visible, setVisible] = useState(false);
     const [archivedDocumentDirectory, setArchivedDocumentDirectory] = useState(
         config.archived_document_directory
@@ -25,6 +26,10 @@ export const Settings = ({ config }: SettingsProps) => {
         });
         if (selected && typeof selected === "string") {
             setArchivedDocumentDirectory(selected);
+            setConfig({
+                ...config,
+                archived_document_directory: selected,
+            });
         }
     };
     const handleSave = async () => {

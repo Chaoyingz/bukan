@@ -77,8 +77,12 @@ pub async fn update_project_name(
         Ok(_) => {
             let mut project_dir = state.config.archived_document_directory.clone();
             project_dir.push(&project.name);
+            if !project_dir.exists() {
+                std::fs::create_dir_all(&project_dir).expect("Error creating project directory");
+            }
             let mut new_project_dir = state.config.archived_document_directory.clone();
             new_project_dir.push(&name);
+            println!("Renaming {:?} to {:?}", &project_dir, &new_project_dir);
             std::fs::rename(&project_dir, &new_project_dir)
                 .expect("Error renaming project directory");
             Ok(())

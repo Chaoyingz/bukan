@@ -33,14 +33,14 @@ export const App = () => {
     }, [CardId]);
     return (
         <div>
-            <Settings config={config} />
+            <Settings config={config} setConfig={setConfig} />
             <div className="flex">
                 <Sidebar refreshProject={refreshProject} />
                 <div>
                     <div className="mt-3">
                         <div
                             className={
-                                "pl-12 mr-6 overflow-scroll min-h-screen" +
+                                "pl-12 mr-6 min-h-screen" +
                                 (newCardVisible ? " w-[calc(100%-27rem)]" : "")
                             }
                         >

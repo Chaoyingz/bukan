@@ -103,6 +103,8 @@ export const NewCard = ({
         fetchUsers();
         fetchLabels();
         fetchProject();
+        setDispatchFile(undefined);
+        setReceivedFiles([]);
     }, [visible]);
     const formApiRef = useRef<FormApi>();
     const saveFormApi = (formApi: FormApi) => {
@@ -116,7 +118,7 @@ export const NewCard = ({
                 registedUserIds = users.map((user) => user.value);
             }
             let checkedUserIds = registedUserIds.filter((userId) =>
-                values.labels.includes(userId)
+                values.assignees.includes(userId)
             );
             const UnregistedUsers = values.assignees.filter(
                 (assignee: string) =>
@@ -200,13 +202,11 @@ export const NewCard = ({
         await createCard(card)
             .then(async () => {
                 Toast.success("Create card successfully");
+                await CopyFileToProject();
                 setVisible(false);
                 setRefreshProject(!refreshProject);
                 formApiRef.current?.setValues({});
                 setName("");
-                setDispatchFile(undefined);
-                setReceivedFiles([]);
-                await CopyFileToProject();
             })
             .catch((err) => {
                 Toast.error(`Create card failed, ${err}`);
