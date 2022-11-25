@@ -16,6 +16,7 @@ pub struct Card {
     pub assignee_ids: Option<String>,
     pub label_names: Option<String>,
     pub assignee_names: Option<String>,
+    pub dispatch_date: Option<String>,
     pub due_date: Option<String>,
     pub created_at: String,
 }
@@ -51,9 +52,10 @@ impl Card {
         assignee_ids: &Option<String>,
         label_names: &Option<String>,
         assignee_names: &Option<String>,
+        dispatch_date: &Option<String>,
         due_date: &Option<String>,
     ) -> Result<(), sqlx::Error> {
-        let insert_result = sqlx::query("INSERT INTO card (name, description, project_id, column_id, dispatch_file, received_files, label_ids, assignee_ids, label_names, assignee_names, due_date) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)")
+        let insert_result = sqlx::query("INSERT INTO card (name, description, project_id, column_id, dispatch_file, received_files, label_ids, assignee_ids, label_names, assignee_names, dispatch_date, due_date) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)")
             .bind(name)
             .bind(description)
             .bind(project_id)
@@ -64,6 +66,7 @@ impl Card {
             .bind(assignee_ids)
             .bind(label_names)
             .bind(assignee_names)
+            .bind(dispatch_date)
             .bind(due_date)
             .execute(pool)
             .await?;
@@ -129,9 +132,10 @@ impl Card {
         assignee_ids: &Option<String>,
         label_names: &Option<String>,
         assignee_names: &Option<String>,
+        dispatch_date: &Option<String>,
         due_date: &Option<String>,
     ) -> Result<(), sqlx::Error> {
-        sqlx::query("UPDATE card SET name = ?1, description = ?2, column_id = ?3, dispatch_file = ?4, received_files = ?5, label_ids = ?6, assignee_ids = ?7, label_names = ?8, assignee_names = ?9, due_date = ?10 WHERE id = ?11")
+        sqlx::query("UPDATE card SET name = ?1, description = ?2, column_id = ?3, dispatch_file = ?4, received_files = ?5, label_ids = ?6, assignee_ids = ?7, label_names = ?8, assignee_names = ?9, dispatch_date = ?10, due_date = ?11 WHERE id = ?12")
             .bind(name)
             .bind(description)
             .bind(column_id)
@@ -141,6 +145,7 @@ impl Card {
             .bind(assignee_ids)
             .bind(label_names)
             .bind(assignee_names)
+            .bind(dispatch_date)
             .bind(due_date)
             .bind(card_id)
             .execute(pool)
@@ -167,5 +172,10 @@ impl Card {
             .execute(pool)
             .await?;
         Ok(())
+    }
+
+    pub async fn all(pool: &SqlitePool) -> Result<Vec<Self>, sqlx::Error> {
+        let cards = sqlx::query_as("SELECT * FROM card").fetch_all(pool).await?;
+        Ok(cards)
     }
 }

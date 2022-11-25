@@ -40,7 +40,7 @@ export const Sidebar = ({ refreshProject }: SidebarProps) => {
             <div className="px-1 shadow-[rgb(55,53,47,0.09)_0px_-1px_0px]">
                 <div className="py-5">
                     <div className="flex mb-3 px-5 justify-between items-center">
-                        <div className="text-sm text-ngray-100">Labels</div>
+                        <div className="text-sm text-ngray-100">标签</div>
                         <button className="bg-transparent">
                             {/* <IconPlus size="small" /> */}
                         </button>
@@ -76,7 +76,7 @@ export const Sidebar = ({ refreshProject }: SidebarProps) => {
                         ))}
                     </div>
                     <div className="flex mb-3 mt-5 px-5 justify-between items-center">
-                        <div className="text-sm text-ngray-100">Assignees</div>
+                        <div className="text-sm text-ngray-100">人员列表</div>
                         <button className="bg-transparent">
                             {/* <IconPlus size="small" /> */}
                         </button>

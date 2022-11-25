@@ -72,7 +72,7 @@ export const Filter = ({
                     className="bg-blue-500 py-1 px-2 rounded text-white hover:bg-blue-600"
                     onClick={() => setNewCardVisible(true)}
                 >
-                    New
+                    新建卡片
                 </button>
             </div>
         </div>

@@ -10,7 +10,6 @@ import {
     getAllLabels,
     createLabel,
     createCard,
-    getCard,
     getProject,
 } from "../tauri";
 import { IconUploadError } from "@douyinfe/semi-icons";
@@ -192,6 +191,7 @@ export const NewCard = ({
             dispatchFile: dispatchFile?.name || "",
             receivedFiles: receivedFiles.map((file) => file.name).join(","),
             dueDate: values.due_date,
+            dispatchDate: values.dispatch_date,
         };
         if (label_ids.length > 0) {
             card.labelIds = label_ids.join(",");
@@ -341,7 +341,7 @@ export const NewCard = ({
                     <Row>
                         <div className="before:content-['*'] before:text-red-500 before:relative before:-top-3 before:-left-1">
                             <input
-                                placeholder="Untitled"
+                                placeholder="未命名"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="bg-white mb-6 hover:bg-white h-10 font-bold placeholder:text-ngray-15 text-3xl p-0.5 outline-none mt-6 text-black w-[calc(100%-1rem)]"
@@ -362,7 +362,7 @@ export const NewCard = ({
                             field="status"
                             placeholder="Please select a status"
                             className="w-60"
-                            label={{ text: "Status", required: true }}
+                            label={{ text: "状态", required: true }}
                         >
                             {columns.map((column) => (
                                 <Form.Select.Option
@@ -385,7 +385,7 @@ export const NewCard = ({
                                 multiple
                                 defaultActiveFirstOption
                                 className="w-60"
-                                label="Assignees"
+                                label="分配给"
                             ></Form.Select>
                         )}
                     </Row>
@@ -400,21 +400,26 @@ export const NewCard = ({
                                 multiple
                                 defaultActiveFirstOption
                                 className="w-60"
-                                label="Labels"
+                                label="标签"
                             ></Form.Select>
                         )}
                     </Row>
                     <Row>
                         <Form.DatePicker
+                            field="dispatch_date"
+                            className="w-60"
+                            label="发文日期"
+                        ></Form.DatePicker>
+                    </Row>
+                    <Row>
+                        <Form.DatePicker
                             field="due_date"
                             className="w-60"
-                            label="Due Date"
+                            label="收文日期"
                         ></Form.DatePicker>
                     </Row>
                     <Row className="py-3 flex">
-                        <Label className="w-[130px] leading-8 mb-0">
-                            Dispatch File
-                        </Label>
+                        <Label className="w-[130px] leading-8 mb-0">收文</Label>
                         <div>
                             {dispatchFile && (
                                 <div className="rounded bg-[rgb(244,245,245)] w-60 h-8 leading-8 px-3 text-sm relative overflow-hidden">
@@ -452,15 +457,13 @@ export const NewCard = ({
                                 <Button
                                     onClick={() => handleDispatchFileUpload()}
                                 >
-                                    Choose File
+                                    选择文件
                                 </Button>
                             )}
                         </div>
                     </Row>
                     <Row className="py-3 flex">
-                        <Label className="w-[130px] leading-8 mb-0">
-                            Received Files
-                        </Label>
+                        <Label className="w-[130px] leading-8 mb-0">发文</Label>
                         <div>
                             {receivedFiles.length !== 0 &&
                                 receivedFiles.map((file, index) => (
@@ -506,7 +509,7 @@ export const NewCard = ({
                                         className="bg-transparent text-sm px-2 h-6"
                                         type="button"
                                     >
-                                        Upload More ...
+                                        上传更多 ...
                                     </button>
                                 </IButton>
                             )}
@@ -515,7 +518,7 @@ export const NewCard = ({
                                 <Button
                                     onClick={() => handleReceivedFileUpload()}
                                 >
-                                    Choose Files
+                                    选择文件
                                 </Button>
                             )}
                         </div>
@@ -526,7 +529,7 @@ export const NewCard = ({
                     <Form.TextArea
                         field="description"
                         label="Description"
-                        placeholder="Add a more detailed description..."
+                        placeholder="添加更详细的描述..."
                         rows={5}
                         maxCount={1000}
                         labelPosition="inset"

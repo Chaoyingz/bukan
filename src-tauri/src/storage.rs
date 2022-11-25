@@ -1,7 +1,11 @@
 use crate::{
     models::{
-        card::Card, column::Column, label::Label, project::Project,
-        project_custom_property::ProjectCustomProperty, user::User,
+        card::Card,
+        column::Column,
+        label::Label,
+        project::{self, Project},
+        project_custom_property::ProjectCustomProperty,
+        user::User,
     },
     state::AppState,
 };
@@ -125,6 +129,7 @@ pub async fn create_card(
     received_files: Option<String>,
     assignee_ids: Option<String>,
     label_ids: Option<String>,
+    dispatch_date: Option<String>,
     due_date: Option<String>,
 ) -> Result<(), String> {
     let state = state.data.lock().await;
@@ -164,6 +169,7 @@ pub async fn create_card(
         &assignee_ids,
         &label_names,
         &assignee_names,
+        &dispatch_date,
         &due_date,
     )
     .await
@@ -184,6 +190,7 @@ pub async fn update_card(
     received_files: Option<String>,
     label_ids: Option<String>,
     assignee_ids: Option<String>,
+    dispatch_date: Option<String>,
     due_date: Option<String>,
 ) -> Result<(), String> {
     let state = state.data.lock().await;
@@ -224,6 +231,7 @@ pub async fn update_card(
         &assignee_ids,
         &label_names,
         &assignee_names,
+        &dispatch_date,
         &due_date,
     )
     .await
@@ -401,4 +409,40 @@ pub async fn delete_user(state: AppState<'_>, user_id: i32) -> Result<(), String
         Ok(_) => Ok(()),
         Err(err) => Err(err.to_string()),
     }
+}
+
+#[tauri::command]
+pub async fn archived_document_by_month(state: AppState<'_>) -> Result<(), String> {
+    let state = state.data.lock().await;
+    let cards = Card::all(&state.db).await.unwrap();
+    let projects = Project::all(&state.db).await.unwrap();
+    let document_dir = state.config.archived_document_directory.clone();
+    println!("document_dir: {:?}", document_dir);
+    for card in cards {
+        let project_name = projects
+            .iter()
+            .find(|project| project.id == card.project_id)
+            .unwrap()
+            .name
+            .clone();
+        let project_dir = &document_dir.join(&project_name);
+        let archived_dir = &document_dir.join("月频归档").join(&project_name);
+        let card_dir = &project_dir.join(&card.name);
+        println!("card_dir: {:?} {:?}", card_dir, card_dir.exists());
+        if !card_dir.exists() {
+            continue;
+        }
+        if let Some(due_date) = card.due_date {
+            let month = &due_date[..7];
+            let target_dir = archived_dir.join(month).join(&card.name);
+            if !target_dir.exists() {
+                std::fs::create_dir_all(&target_dir).unwrap();
+            }
+            println!("{} -> {}", card_dir.display(), target_dir.display());
+            let mut options = fs_extra::dir::CopyOptions::new();
+            options.overwrite = true;
+            fs_extra::copy_items(&[&card_dir], &target_dir, &options).unwrap();
+        };
+    }
+    Ok(())
 }

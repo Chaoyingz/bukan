@@ -43,6 +43,7 @@ async fn main() {
             storage::create_project_custom_property,
             storage::delete_label,
             storage::delete_user,
+            storage::archived_document_by_month,
         ])
         .manage(state)
         .run(ctx)

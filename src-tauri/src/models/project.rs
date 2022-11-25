@@ -3,7 +3,7 @@ use sqlx::FromRow;
 use sqlx::SqlitePool;
 
 pub const DEFAULT_PROJECT_ID: i32 = 1;
-pub const DEFAULT_PROJECT_NAME: &str = "Default Project";
+pub const DEFAULT_PROJECT_NAME: &str = "默认项目";
 
 #[derive(FromRow, Deserialize, Serialize, Debug)]
 pub struct Project {

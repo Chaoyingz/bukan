@@ -118,7 +118,7 @@ export const IColumn = ({
                         >
                             <IconPlus size="small" />
                             <span className="ml-2 text-sm font-semibold select-none">
-                                New
+                                新建
                             </span>
                         </button>
                     </IButton>

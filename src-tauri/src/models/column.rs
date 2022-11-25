@@ -23,17 +23,17 @@ impl Column {
     ) -> Result<(), sqlx::Error> {
         let columns = vec![
             NewColumn {
-                name: "To Do".to_string(),
+                name: "待做".to_string(),
                 project_id: *project_id,
                 card_ids: "".to_string(),
             },
             NewColumn {
-                name: "In Progress".to_string(),
+                name: "进行中".to_string(),
                 project_id: *project_id,
                 card_ids: "".to_string(),
             },
             NewColumn {
-                name: "Done".to_string(),
+                name: "已完成".to_string(),
                 project_id: *project_id,
                 card_ids: "".to_string(),
             },

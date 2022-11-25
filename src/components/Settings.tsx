@@ -1,10 +1,13 @@
 import { IconMore } from "@douyinfe/semi-icons";
-import { Modal } from "@douyinfe/semi-ui";
+import { Modal, Toast } from "@douyinfe/semi-ui";
 import { useEffect, useState } from "react";
 import { Config } from "../types";
 import { IButton } from "./IButton";
 import { open } from "@tauri-apps/api/dialog";
-import { setArchivedDocumentDirectory as setArchivedDocumentDirectoryTauri } from "../tauri";
+import {
+    archivedDocumentByMonth,
+    setArchivedDocumentDirectory as setArchivedDocumentDirectoryTauri,
+} from "../tauri";
 
 type SettingsProps = {
     config: Config;
@@ -39,6 +42,15 @@ export const Settings = ({ config, setConfig }: SettingsProps) => {
         });
         setVisible(false);
     };
+    const handlearchivedDocumentByMonth = async () => {
+        await archivedDocumentByMonth()
+            .then((res) => {
+                Toast.success("归档成功");
+            })
+            .catch((err) => {
+                Toast.error("归档失败");
+            });
+    };
     return (
         <div className="px-4 flex items-center h-10 flex-row-reverse fixed right-0">
             <IButton onClick={() => setVisible(true)}>
@@ -46,16 +58,14 @@ export const Settings = ({ config, setConfig }: SettingsProps) => {
             </IButton>
             <Modal
                 visible={visible}
-                title="Settings"
+                title="设置"
                 closeOnEsc={true}
                 onCancel={() => setVisible(false)}
                 size="medium"
                 onOk={() => handleSave()}
             >
                 <div>
-                    <div className="font-semibold">
-                        Archived Document Directory
-                    </div>
+                    <div className="font-semibold">归档文件目录</div>
                     <div className="w-full h-9 mt-3 leading-9 px-2 rounded border border-blue-400 relative">
                         {archivedDocumentDirectory}
                         <IButton
@@ -63,10 +73,17 @@ export const Settings = ({ config, setConfig }: SettingsProps) => {
                             onClick={() => handleChooseDirectory()}
                         >
                             <button className="h-7 bg-transparent leading-7 text-blue-500">
-                                Change
+                                修改
                             </button>
                         </IButton>
                     </div>
+                </div>
+                <div className="mt-4">
+                    <IButton onClick={() => handlearchivedDocumentByMonth()}>
+                        <button className="bg-transparent">
+                            一键按月频将文件归档
+                        </button>
+                    </IButton>
                 </div>
             </Modal>
         </div>

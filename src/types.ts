@@ -52,6 +52,7 @@ export interface CardInCreate {
     receivedFiles: string;
     labelIds?: string;
     assigneeIds?: string;
+    dispatchDate: string;
     dueDate: string;
 }
 
@@ -61,6 +62,7 @@ export interface Card {
     project_id: number;
     column_id: number;
     description: string;
+    dispatch_date: string;
     due_date: string;
     created_at: string;
     label_ids: string;

@@ -63,9 +63,10 @@ export const createCard = async (
     receivedFiles,
     labelIds,
     assigneeIds,
+    dispatchDate,
     dueDate,}: CardInCreate
 ): Promise<void> => {
-    return await invoke("create_card", { name, projectId, columnId, description, dispatchFile, receivedFiles, labelIds, assigneeIds, dueDate });
+    return await invoke("create_card", { name, projectId, columnId, description, dispatchFile, receivedFiles, labelIds, assigneeIds, dispatchDate, dueDate });
 }
 
 export const updateCard = async (
@@ -78,9 +79,10 @@ export const updateCard = async (
         receivedFiles,
         labelIds,
         assigneeIds,
+        dispatchDate,
         dueDate,}: CardInCreate
 ): Promise<void> => {
-    return await invoke("update_card", { cardId, name, projectId, columnId, description, dispatchFile, receivedFiles, labelIds, assigneeIds, dueDate });
+    return await invoke("update_card", { cardId, name, projectId, columnId, description, dispatchFile, receivedFiles, labelIds, assigneeIds, dispatchDate, dueDate });
 }
 
 export const getCard = async (cardId: Number): Promise<Card> => {
@@ -117,4 +119,8 @@ export const deleteLabel = async (labelId: Number): Promise<void> => {
 
 export const createProjectCustomProperty = async ({project_id, name, property_type, is_multiple}: ProjectCustomProperty): Promise<void> => {
     return await invoke("create_project_custom_property", { projectId: project_id, name: name, propertyType: property_type, isMultiple: is_multiple });
+}
+
+export const archivedDocumentByMonth = async (): Promise<void> => {
+    return await invoke("archived_document_by_month");
 }
